@@ -20,15 +20,15 @@ RUN apt-get update -q \
 RUN rm -rf /etc/update-motd.d /etc/motd /etc/motd.dynamic
 RUN ln -fs /dev/null /run/motd.dynamic
 
+# Resolve error: TERM environment variable not set.
+ENV TERM xterm
+
 # Copy assets
 COPY assets/ /assets/
 RUN /assets/setup
 
 # Allow to access embedded tools
 ENV PATH /opt/gitlab/embedded/bin:/opt/gitlab/bin:/assets:$PATH
-
-# Resolve error: TERM environment variable not set.
-ENV TERM xterm
 
 RUN echo '#!/bin/sh \n\
 if ! whoami &> /dev/null; then \n\

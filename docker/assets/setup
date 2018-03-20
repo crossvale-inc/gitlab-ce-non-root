@@ -2,8 +2,6 @@
 
 set -e
 
-source /etc/lsb-release
-
 # Download & Install GitLab
 # If you run GitLab Enterprise Edition point it to a location where you have downloaded it.
 echo "deb https://packages.gitlab.com/gitlab/gitlab-ce/ubuntu/ xenial main" > /etc/apt/sources.list.d/gitlab_gitlab-ce.list
