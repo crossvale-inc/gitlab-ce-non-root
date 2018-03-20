@@ -20,14 +20,6 @@ RUN apt-get update -q \
 RUN rm -rf /etc/update-motd.d /etc/motd /etc/motd.dynamic
 RUN ln -fs /dev/null /run/motd.dynamic
 
-RUN echo '#!/bin/sh \n\
-if ! whoami &> /dev/null; then \n\
-  if [ -w /etc/passwd ]; then \n\
-    echo "openshift:x:$(id -u):0:Openshift user:/opt/gitlab:/sbin/nologin" >> /etc/passwd \n\
-  fi \n\
-fi \n\
-exec "$@" \n' > /assets/uid_entrypoint && chmod a+x /assets/uid_entrypoint
-
 # Copy assets
 COPY assets/ /assets/
 RUN /assets/setup
@@ -37,6 +29,14 @@ ENV PATH /opt/gitlab/embedded/bin:/opt/gitlab/bin:/assets:$PATH
 
 # Resolve error: TERM environment variable not set.
 ENV TERM xterm
+
+RUN echo '#!/bin/sh \n\
+if ! whoami &> /dev/null; then \n\
+  if [ -w /etc/passwd ]; then \n\
+    echo "openshift:x:$(id -u):0:Openshift user:/opt/gitlab:/sbin/nologin" >> /etc/passwd \n\
+  fi \n\
+fi \n\
+exec "$@" \n' > /assets/uid_entrypoint && chmod a+x /assets/uid_entrypoint
 
 # Ensure that the folders exist and the permissions are right
 RUN /bin/bash -c 'export FOLDERS="/opt/gitlab /etc/gitlab /var/opt/gitlab /var/log/gitlab /assets"; \
