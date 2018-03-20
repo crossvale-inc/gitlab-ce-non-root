@@ -31,6 +31,7 @@ RUN /assets/setup
 ENV PATH /opt/gitlab/embedded/bin:/opt/gitlab/bin:/assets:$PATH
 
 RUN echo '#!/bin/sh \n\
+alias ll='ls -lah' \n\
 if ! whoami &> /dev/null; then \n\
   if [ -w /etc/passwd ]; then \n\
     echo "openshift:x:$(id -u):0:Openshift user:/opt/gitlab:/sbin/nologin" >> /etc/passwd \n\
@@ -39,14 +40,13 @@ fi \n\
 exec "$@" \n' > /assets/uid_entrypoint && chmod a+x /assets/uid_entrypoint
 
 # Ensure that the folders exist and the permissions are right
-RUN /bin/bash -c 'export FOLDERS="/opt/gitlab /etc/gitlab /var/opt/gitlab /var/log/gitlab /assets"; \
+RUN /bin/bash -c 'export FOLDERS="/opt/gitlab /etc/gitlab /var/opt /var/log /assets"; \
                   for i in $FOLDERS; \
                   do \
+                  echo Changing permissions to folder $i...
                   [ -d $i ] || mkdir -p $i && touch $i/.empty && chmod g+wrx $i && rm -f $i/.empty; \
-                  ls -lah $i; \
                   chgrp -R 0 $i; \
                   chmod -R g=u $i; \
-                  ls -lah $i; \
                   done'
 
 RUN /bin/bash -c 'export TEMP_PATH=/etc/passwd; chmod -R g=u $(echo $TEMP_PATH); chgrp -R 0 $(echo $TEMP_PATH)'
