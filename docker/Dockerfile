@@ -42,7 +42,7 @@ exec "$@" \n' > /assets/uid_entrypoint && chmod a+x /assets/uid_entrypoint
 RUN /bin/bash -c 'export FOLDERS="/opt/gitlab /etc/gitlab /var/opt/gitlab /var/log/gitlab /assets"; \
                   for i in $FOLDERS; \
                   do \
-                  [ -d $i ] || mkdir -p $i && chmod g+wrx $i; \
+                  [ -d $i ] || mkdir -p $i && touch $i/.empty && chmod g+wrx $i; \
                   ls -lah $i; \
                   chgrp -R 0 $i; \
                   chmod -R g=u $i; \
