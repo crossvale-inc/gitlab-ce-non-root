@@ -39,8 +39,10 @@ if ! whoami &> /dev/null; then \n\
 fi \n\
 exec "$@" \n' > /assets/uid_entrypoint && chmod a+x /assets/uid_entrypoint
 
+RUN /assets/prepare-env
+
 # Ensure that the folders exist and the permissions are right
-RUN /bin/bash -c 'export FOLDERS="/opt/gitlab /etc/gitlab /var/opt /var/log /assets"; \
+RUN /bin/bash -c 'export FOLDERS="/opt/gitlab /etc/gitlab /var/opt/gitlab /var/log/gitlab /assets"; \
                   for i in $FOLDERS; \
                   do \
                   echo Changing permissions to folder $i...; \

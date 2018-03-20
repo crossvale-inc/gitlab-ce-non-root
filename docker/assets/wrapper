@@ -20,7 +20,7 @@ function failed_pg_upgrade() {
 trap "sigterm_handler; exit" TERM
 
 echo "Thank you for using GitLab Docker Image!"
-echo 
+echo
 echo "Configure GitLab for your system by editing /etc/gitlab/gitlab.rb file"
 echo "And restart this container to reload settings."
 echo "To do it use docker exec:"
@@ -37,55 +37,6 @@ echo "  docker exec -it gitlab update-permissions"
 echo "  docker restart gitlab"
 echo
 sleep 3s
-
-# Copy gitlab.rb for the first time
-if [[ ! -e /etc/gitlab/gitlab.rb ]]; then
-	echo "Installing gitlab.rb config..."
-	cp /opt/gitlab/etc/gitlab.rb.template /etc/gitlab/gitlab.rb
-	chmod 0600 /etc/gitlab/gitlab.rb
-fi
-
-# Generate ssh host key for the first time
-if [[ ! -f /etc/gitlab/ssh_host_rsa_key ]]; then
-	echo "Generating ssh_host_rsa_key..."
-	ssh-keygen -f /etc/gitlab/ssh_host_rsa_key -N '' -t rsa
-	chmod 0600 /etc/gitlab/ssh_host_rsa_key
-fi
-if [[ ! -f /etc/gitlab/ssh_host_ecdsa_key ]]; then
-	echo "Generating ssh_host_ecdsa_key..."
-	ssh-keygen -f /etc/gitlab/ssh_host_ecdsa_key -N '' -t ecdsa
-	chmod 0600 /etc/gitlab/ssh_host_ecdsa_key
-fi
-if [[ ! -f /etc/gitlab/ssh_host_ed25519_key ]]; then
-	echo "Generating ssh_host_ed25519_key..."
-	ssh-keygen -f /etc/gitlab/ssh_host_ed25519_key -N '' -t ed25519
-	chmod 0600 /etc/gitlab/ssh_host_ed25519_key
-fi
-
-# Remove all services, the reconfigure will create them
-echo "Preparing services..."
-rm -f /opt/gitlab/service/*
-ln -s /opt/gitlab/sv/sshd /opt/gitlab/service
-ln -sf /opt/gitlab/embedded/bin/sv /opt/gitlab/init/sshd
-mkdir -p /var/log/gitlab/sshd
-
-# Start service manager
-echo "Starting services..."
-GITLAB_OMNIBUS_CONFIG= /opt/gitlab/embedded/bin/runsvdir-start &
-
-echo "Configuring GitLab..."
-gitlab-ctl reconfigure
-
-# Make sure PostgreSQL is at the latest version.
-# If it fails, print a message with a workaround and exit
-if [ "${GITLAB_SKIP_PG_UPGRADE}" != true ]; then
-    gitlab-ctl pg-upgrade -w || failed_pg_upgrade
-fi
-
-if [ -n "${GITLAB_POST_RECONFIGURE_SCRIPT+x}" ]; then
-  echo "Runnning Post Reconfigure Script..."
-  eval "${GITLAB_POST_RECONFIGURE_SCRIPT}"
-fi
 
 # Tail all logs
 gitlab-ctl tail &
