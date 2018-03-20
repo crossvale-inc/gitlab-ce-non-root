@@ -20,8 +20,15 @@ RUN apt-get update -q \
 RUN rm -rf /etc/update-motd.d /etc/motd /etc/motd.dynamic
 RUN ln -fs /dev/null /run/motd.dynamic
 
+RUN echo '#!/bin/sh \n\
+if ! whoami &> /dev/null; then \n\
+  if [ -w /etc/passwd ]; then \n\
+    echo "openshift:x:$(id -u):0:Openshift user:/opt/gitlab:/sbin/nologin" >> /etc/passwd \n\
+  fi \n\
+fi \n\
+exec "$@" \n' > /assets/uid_entrypoint && chmod a+x /assets/uid_entrypoint
+
 # Copy assets
-COPY RELEASE /
 COPY assets/ /assets/
 RUN /assets/setup
 
@@ -31,11 +38,30 @@ ENV PATH /opt/gitlab/embedded/bin:/opt/gitlab/bin:/assets:$PATH
 # Resolve error: TERM environment variable not set.
 ENV TERM xterm
 
+# Ensure that the folders exist and the permissions are right
+RUN /bin/bash -c 'export FOLDERS="/opt/gitlab /etc/gitlab /var/opt/gitlab /var/log/gitlab /assets"; \
+                  for i in $FOLDERS; \
+                  do \
+                  [ -d $i ] || mkdir -p $i && chmod g+wrx $i; \
+                  ls -lah $i; \
+                  chgrp -R 0 $i; \
+                  chmod -R g=u $i; \
+                  ls -lah $i; \
+                  done'
+
+RUN /bin/bash -c 'export TEMP_PATH=/etc/passwd; chmod -R g=u $(echo $TEMP_PATH); chgrp -R 0 $(echo $TEMP_PATH)'
+
 # Expose web & ssh
 EXPOSE 443 80 22
 
+# Change the user
+USER 1001
+
 # Define data volumes
 VOLUME ["/etc/gitlab", "/var/opt/gitlab", "/var/log/gitlab"]
+
+# Wrapper to handle signal, trigger runit and reconfigure GitLab
+ENTRYPOINT [ "/assets/uid_entrypoint" ]
 
 # Wrapper to handle signal, trigger runit and reconfigure GitLab
 CMD ["/assets/wrapper"]
