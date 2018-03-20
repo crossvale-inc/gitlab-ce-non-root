@@ -3,7 +3,6 @@
 set -e
 
 source /etc/lsb-release
-source /RELEASE
 
 # Install GitLab
 DOWNLOAD_URL=${DOWNLOAD_URL} TRIGGER_PRIVATE_TOKEN=${TRIGGER_PRIVATE_TOKEN} /assets/download-package && dpkg -i /tmp/gitlab.deb && rm /tmp/gitlab.deb
@@ -12,7 +11,7 @@ rm -rf /var/lib/apt/lists/*
 # Create sshd daemon
 mkdir -p /opt/gitlab/sv/sshd/supervise /opt/gitlab/sv/sshd/log/supervise
 mkfifo /opt/gitlab/sv/sshd/supervise/ok /opt/gitlab/sv/sshd/log/supervise/ok
-printf "#!/bin/sh\nexec 2>&1\numask 077\nexec /usr/sbin/sshd -D -f /assets/sshd_config -e" > /opt/gitlab/sv/sshd/run
+printf "#!/bin/sh\nexec 2>&1\numask 007\nexec /usr/sbin/sshd -D -f /assets/sshd_config -e" > /opt/gitlab/sv/sshd/run
 printf "#!/bin/sh\nexec svlogd -tt /var/log/gitlab/sshd" > /opt/gitlab/sv/sshd/log/run
 chmod a+x /opt/gitlab/sv/sshd/run /opt/gitlab/sv/sshd/log/run
 mkdir -p /var/run/sshd
